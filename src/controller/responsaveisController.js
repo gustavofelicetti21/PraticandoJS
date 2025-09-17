@@ -1,11 +1,29 @@
+import NaoEncontrado from "../erros/NaoEncontrado.js";
 import responsaveis from "../models/Responsaveis.js";
 
 class ResponsaveisController {
     static listarResponsaveis = async (req,res) => {
         try {
             const responsaveisResultado = await responsaveis.find().exec();
+            if (responsaveisResultado!==null) {
+                res.status(200).json(responsaveisResultado);
+            } else {
+                res.status(200).json({});
+            }
+        } catch (erro) {
+            console.log(erro);
+        }
+    }
 
-            res.status(200).json(responsaveisResultado);
+    static listarResponsaveisPorId = async (req,res, next) => {
+        try {
+            const responsaveisResultado = await responsaveis.findById(req.params.id).exec();
+
+            if (responsaveisResultado!==null) {
+                res.status(200).json(responsaveisResultado);
+            } else {
+                next(new NaoEncontrado("Responsável não encontrado"));
+            }
         } catch (erro) {
             console.log(erro);
         }
@@ -23,7 +41,7 @@ class ResponsaveisController {
         }
     }
 
-    static atualizarResponsavel = async (req, res) => {
+    static atualizarResponsavel = async (req, res, next) => {
         try {
             const id = req.params.id;
             const responsavelResultado = await responsaveis.findByIdAndUpdate(id, {$set: req.body});
@@ -31,14 +49,14 @@ class ResponsaveisController {
             if (responsavelResultado!==null) {
                 res.status(200).send({message: "Responsavel atualizado com sucesso"});
             } else {
-                res.status(500).send({message: "Não foi possivel atualizar responsavel"});
+                next(new NaoEncontrado("Responsável não encontrado"));
             }
         } catch(erro) {
             console.log(erro);
         }
     }
 
-    static deletarResponsavel = async (req, res) => {
+    static deletarResponsavel = async (req, res, next) => {
         try {
             const id = req.params.id;
             const responsavelResultado = await responsaveis.findByIdAndDelete(id);
@@ -46,7 +64,7 @@ class ResponsaveisController {
             if (responsavelResultado!==null) {
                 res.status(200).send({message: "Responsavel removido com sucesso"});
             } else {
-                res.status(500).send({message: "Não foi possivel deletar responsavel"});
+                next(new NaoEncontrado("Responsável não encontrado"));
             }
         } catch (erro) {
             console.log(erro);
