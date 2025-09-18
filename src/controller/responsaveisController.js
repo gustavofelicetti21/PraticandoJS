@@ -11,7 +11,7 @@ class ResponsaveisController {
                 res.status(200).json({});
             }
         } catch (erro) {
-            console.log(erro);
+            next(erro);
         }
     }
 
@@ -25,11 +25,11 @@ class ResponsaveisController {
                 next(new NaoEncontrado("Responsável não encontrado"));
             }
         } catch (erro) {
-            console.log(erro);
+            next(erro);
         }
     }
 
-    static cadastrarResponsavel = async (req, res) => {
+    static cadastrarResponsavel = async (req, res, next) => {
         try {
             const responsavel = new responsaveis(req.body);
 
@@ -37,7 +37,7 @@ class ResponsaveisController {
 
             res.status(201).send(responsavelResultado.toJSON());
         } catch (erro) {
-            console.log(erro);
+            next(erro);
         }
     }
 
@@ -52,7 +52,7 @@ class ResponsaveisController {
                 next(new NaoEncontrado("Responsável não encontrado"));
             }
         } catch(erro) {
-            console.log(erro);
+            next(erro);
         }
     }
 
@@ -67,7 +67,7 @@ class ResponsaveisController {
                 next(new NaoEncontrado("Responsável não encontrado"));
             }
         } catch (erro) {
-            console.log(erro);
+            next(erro);
         }
     }
 }

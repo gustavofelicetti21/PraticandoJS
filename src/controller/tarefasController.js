@@ -12,13 +12,14 @@ class TarefasController {
                 res.status(200).json({});
             }
         } catch (erro) {
-            console.log(erro);
+            next(erro);
         }
     }
 
     static listarTarefasPorId = async (req, res, next) => {
         try {
-            const tarefasResultado = await tarefas.findById(req.params.id).exec();
+            const tarefasResultado = await tarefas.findById(req.params.id, {}, {autopopulate: false})
+                .populate("responsavel");
 
             if (tarefasResultado!==null) {
                 res.status(200).json(tarefasResultado);
@@ -26,7 +27,7 @@ class TarefasController {
                 next(new NaoEncontrado("Não foi encontrar responsavel"));
             }
         } catch (erro) {
-            console.log(erro);
+            next(erro)
         }
     }
 
@@ -51,7 +52,9 @@ class TarefasController {
 
             const tarefaOriginal = await tarefas.findById(id);
 
-            if (tarefaOriginal.status=="Finalizado"){
+            if (tarefaOriginal==null) {
+                next(new NaoEncontrado("Tarefa não encontrada"));
+            } else if (tarefaOriginal.status=="Finalizado"){
                 next(new RequisicaoIncorreta("Tarefa Finalizada, não pode ser alterada"));
             } else if((!status.includes(tarefa.status))&&(tarefa.status!==undefined)) {
                 next(new RequisicaoIncorreta(`Status '${tarefa.status}' é inválido`));
@@ -63,14 +66,10 @@ class TarefasController {
                 }
                 const tarefaResultado = await tarefas.findByIdAndUpdate(id, {$set: tarefa});
 
-                if (tarefaResultado!==null) {
-                    res.status(200).send({message: "Tarefa atualizado com sucesso"});
-                } else {
-                    next(new NaoEncontrado("Tarefa não encontrada"));
-                }
+                res.status(200).send({message: "Tarefa atualizado com sucesso"});
             }
         } catch(erro) {
-            console.log(erro);
+            next(erro);
         }
     }
 
@@ -84,7 +83,7 @@ class TarefasController {
                 next(new NaoEncontrado("Tarefa não encontrada"));
             }
         } catch(erro) {
-            console.log(erro);
+            next(erro);
         }
     }
 }
