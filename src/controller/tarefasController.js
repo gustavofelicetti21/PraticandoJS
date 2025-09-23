@@ -1,16 +1,15 @@
 import RequisicaoIncorreta from "../erros/RequisicaoIncorreta.js";
 import NaoEncontrado from "../erros/NaoEncontrado.js"
-import tarefas from "../models/Tarefas.js";
+import {responsaveis, tarefas} from "../models/index.js";
 
 class TarefasController {
-    static listarTarefas = async (req, res) => {
+    static listarTarefas =  (req, res, next) => {
         try {
-            const tarefasResultado = await tarefas.find();
-            if (tarefasResultado!==null) {
-                res.status(200).json(tarefasResultado)
-            } else {
-                res.status(200).json({});
-            }
+            const tarefasResultado = tarefas.find();
+
+            req.resultado = tarefasResultado;
+            
+            next();
         } catch (erro) {
             next(erro);
         }
@@ -27,7 +26,25 @@ class TarefasController {
                 next(new NaoEncontrado("Não foi encontrar responsavel"));
             }
         } catch (erro) {
-            next(erro)
+            next(erro);
+        }
+    }
+
+    static listarTarefasFiltrando = async (req, res, next) => {
+        try {
+            const busca = await processaBusca(req.query);
+
+            if (busca!==null) {
+                const tarefasResultado = tarefas.find(busca,{});
+
+                req.resultado = tarefasResultado;
+
+                next();
+            } else {
+                res.status(200).send([]);
+            }
+        } catch (erro) {
+            next (erro);
         }
     }
 
@@ -86,6 +103,28 @@ class TarefasController {
             next(erro);
         }
     }
+}
+
+async function processaBusca(parametros) {
+    const {titulo, responsavel, status, urgencia} = parametros;
+
+    let busca = {};
+
+    if(titulo) busca.titulo={$regex: titulo, $options: "i"};
+    if(status) busca.status={$regex: status, $options: "i"};
+    if(urgencia) busca.urgencia={ $regex: urgencia, $options: "i"};
+
+    if (responsavel) {
+        const buscaResponsavel = await responsaveis.findOne({nome: {$regex: responsavel, $options: "i"}});
+
+        if ( buscaResponsavel!==null) {
+            busca.responsavel = buscaResponsavel._id;
+        } else {
+            busca =null;
+        }
+    }
+
+    return busca;
 }
 
 export default TarefasController;

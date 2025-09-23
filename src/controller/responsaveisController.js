@@ -1,15 +1,14 @@
 import NaoEncontrado from "../erros/NaoEncontrado.js";
-import responsaveis from "../models/Responsaveis.js";
+import {responsaveis} from "../models/index.js";
 
 class ResponsaveisController {
-    static listarResponsaveis = async (req,res) => {
+    static listarResponsaveis =  (req,res, next) => {
         try {
-            const responsaveisResultado = await responsaveis.find().exec();
-            if (responsaveisResultado!==null) {
-                res.status(200).json(responsaveisResultado);
-            } else {
-                res.status(200).json({});
-            }
+            const responsaveisResultado =  responsaveis.find();
+            
+            req.resultado = responsaveisResultado;
+
+            next();
         } catch (erro) {
             next(erro);
         }
@@ -23,6 +22,24 @@ class ResponsaveisController {
                 res.status(200).json(responsaveisResultado);
             } else {
                 next(new NaoEncontrado("Responsável não encontrado"));
+            }
+        } catch (erro) {
+            next(erro);
+        }
+    }
+
+    static listarResponsaveisFiltrando = async (req, res, next) => {
+        try {
+            const busca = await processaBusca(req.query);
+
+            if (busca!==null) {
+                const responsaveisResultado =  responsaveis.find(busca, {});
+            
+                req.resultado = responsaveisResultado;
+
+                next();
+            } else {
+                res.status(200).send([]);
             }
         } catch (erro) {
             next(erro);
@@ -69,6 +86,22 @@ class ResponsaveisController {
         } catch (erro) {
             next(erro);
         }
+    }
+}
+
+async function processaBusca(parametros) {
+    const {nome, idade, cargo} = parametros;
+
+    let busca = {};
+
+    if (nome) busca.nome={$regex: nome, $options: "i"};
+    if (cargo) busca.cargo = cargo;
+    if (idade) busca.idade = parseInt(idade);
+
+    if (busca=={}) {
+        return null;
+    } else {
+        return busca;
     }
 }
 
